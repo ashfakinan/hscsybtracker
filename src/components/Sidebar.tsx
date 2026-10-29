@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Plus, List, Layers, LogOut } from 'lucide-react';
 import type { Subject, ProgressMap, CheckType } from '@/lib/types';
 import { progressKey } from '@/lib/data';
+import { PWAInstallBanner } from '@/components/PWAInstallBanner';
 
 interface SidebarProps {
   subjects: Subject[];
@@ -134,6 +135,7 @@ function SidebarImpl({
         className="px-2 py-2.5 flex flex-col gap-1"
         style={{ borderTop: '1px solid var(--border)' }}
       >
+        <PWAInstallBanner />
         <SidebarButton icon={<Plus size={14} />} label="Add Subject" onClick={onAddSubject} />
         <SidebarButton icon={<List size={14} />} label="Add Chapter" onClick={onAddChapter} />
         <SidebarButton icon={<Layers size={14} />} label="Bulk Add" onClick={onBulkAdd} />
