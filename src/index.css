@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f8f9fb;
+  --surface: #ffffff;
+  --surface2: #f1f3f7;
+  --border: #e2e6ed;
+  --fg: #1a1e27;
+  --fg2: #5a6070;
+  --fg3: #9aa0ae;
+  --accent: #4f63d2;
+  --accent-light: #eef0fb;
+  --accent-dark: #3a4fb8;
+  --theory: #2da56e;
+  --theory-light: #e6f7f0;
+  --cq: #e07b2a;
+  --cq-light: #fdf0e6;
+  --mcq: #9b3fd4;
+  --mcq-light: #f4eafb;
+  --done-bg: #f0fdf6;
+  --radius: 10px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.06), 0 2px 12px rgba(0,0,0,0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1117;
+    --surface: #1a1d26;
+    --surface2: #22263a;
+    --border: #2d3244;
+    --fg: #e8eaf2;
+    --fg2: #9aa0b8;
+    --fg3: #5a6078;
+    --accent: #6b7fe0;
+    --accent-light: #1e2240;
+    --accent-dark: #8390e8;
+    --theory: #34c27e;
+    --theory-light: #0d2218;
+    --cq: #e8943a;
+    --cq-light: #231508;
+    --mcq: #b05fe0;
+    --mcq-light: #1e0e2a;
+    --done-bg: #0c1e15;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1117;
+  --surface: #1a1d26;
+  --surface2: #22263a;
+  --border: #2d3244;
+  --fg: #e8eaf2;
+  --fg2: #9aa0b8;
+  --fg3: #5a6078;
+  --accent: #6b7fe0;
+  --accent-light: #1e2240;
+  --accent-dark: #8390e8;
+  --theory: #34c27e;
+  --theory-light: #0d2218;
+  --cq: #e8943a;
+  --cq-light: #231508;
+  --mcq: #b05fe0;
+  --mcq-light: #1e0e2a;
+  --done-bg: #0c1e15;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', 'Noto Sans Bengali', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* === Sidebar responsive: desktop static, mobile slide-in === */
+.sidebar-container {
+  width: 220px;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    transform: translateX(-100%);
+  }
+  .sidebar-container[data-open="true"] {
+    transform: translateX(0);
+  }
+}
+
+/* === CSS-based hover states (replaces inline JS handlers) === */
+.nav-item:hover:not(.nav-item-active) {
+  background: var(--surface2) !important;
+}
+
+.sidebar-btn:hover {
+  background: var(--surface2) !important;
+  color: var(--fg) !important;
+}
+
+.check-btn:hover {
+  opacity: 0.85;
+}
