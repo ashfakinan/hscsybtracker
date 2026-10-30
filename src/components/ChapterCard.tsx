@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Edit2 } from 'lucide-react';
 import type { CheckType } from '@/lib/types';
 
 interface ChapterCardProps {
@@ -10,6 +10,7 @@ interface ChapterCardProps {
   cqChecked: boolean;
   mcqChecked: boolean;
   onToggle: (chapterId: string, type: CheckType, checked: boolean) => void;
+  onRename?: (chapterId: string, currentName: string) => void;
 }
 
 const CHECK_TYPES: CheckType[] = ['theory', 'cq', 'mcq'];
@@ -33,6 +34,7 @@ function ChapterCardImpl({
   cqChecked,
   mcqChecked,
   onToggle,
+  onRename,
 }: ChapterCardProps) {
   const checkedMap: Record<CheckType, boolean> = {
     theory: theoryChecked,
@@ -43,7 +45,7 @@ function ChapterCardImpl({
 
   return (
     <div
-      className="rounded-[10px] px-3.5 py-3 transition-colors"
+      className="rounded-[10px] px-3.5 py-3 transition-colors group"
       style={{
         background: allDone ? 'var(--done-bg)' : 'var(--surface)',
         border: `1px solid ${allDone ? 'var(--theory)' : 'var(--border)'}`,
@@ -65,6 +67,17 @@ function ChapterCardImpl({
         >
           {chapterName}
         </span>
+        {onRename && (
+          <button
+            type="button"
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-surface2"
+            style={{ border: 'none', background: 'transparent', color: 'var(--fg3)', cursor: 'pointer' }}
+            onClick={() => onRename(chapterId, chapterName)}
+            title="Rename Chapter"
+          >
+            <Edit2 size={13} />
+          </button>
+        )}
       </div>
       <div className="flex gap-2 mt-2.5 flex-wrap">
         {CHECK_TYPES.map((type) => {

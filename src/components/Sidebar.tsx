@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Plus, List, Layers, LogOut } from 'lucide-react';
+import { Plus, List, Layers, Download, LogOut } from 'lucide-react';
 import type { Subject, ProgressMap, CheckType } from '@/lib/types';
 import { progressKey } from '@/lib/data';
 import { PWAInstallBanner } from '@/components/PWAInstallBanner';
@@ -12,6 +12,7 @@ interface SidebarProps {
   onAddSubject: () => void;
   onAddChapter: () => void;
   onBulkAdd: () => void;
+  onExportProgress: () => void;
   onSignOut: () => void;
 }
 
@@ -55,6 +56,7 @@ function SidebarImpl({
   onAddSubject,
   onAddChapter,
   onBulkAdd,
+  onExportProgress,
   onSignOut,
 }: SidebarProps) {
   const pct = overallPct(subjects, progress);
@@ -139,6 +141,7 @@ function SidebarImpl({
         <SidebarButton icon={<Plus size={14} />} label="Add Subject" onClick={onAddSubject} />
         <SidebarButton icon={<List size={14} />} label="Add Chapter" onClick={onAddChapter} />
         <SidebarButton icon={<Layers size={14} />} label="Bulk Add" onClick={onBulkAdd} />
+        <SidebarButton icon={<Download size={14} />} label="Export Progress" onClick={onExportProgress} />
         <SidebarButton icon={<LogOut size={14} />} label="Sign Out" onClick={onSignOut} />
       </div>
     </aside>

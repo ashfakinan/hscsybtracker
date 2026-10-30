@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Edit2 } from 'lucide-react';
 import type { Subject, ProgressMap, CheckType } from '@/lib/types';
 import { progressKey } from '@/lib/data';
 import { ChapterCard } from './ChapterCard';
@@ -9,6 +9,8 @@ interface MainContentProps {
   progress: ProgressMap;
   onToggle: (chapterId: string, type: CheckType, checked: boolean) => void;
   onOpenSidebar: () => void;
+  onRenameSubject: (subject: Subject) => void;
+  onRenameChapter: (chapterId: string, currentName: string) => void;
 }
 
 function subjectStats(subject: Subject, progress: ProgressMap) {
@@ -37,7 +39,14 @@ function subjectStats(subject: Subject, progress: ProgressMap) {
   };
 }
 
-function MainContentImpl({ subject, progress, onToggle, onOpenSidebar }: MainContentProps) {
+function MainContentImpl({
+  subject,
+  progress,
+  onToggle,
+  onOpenSidebar,
+  onRenameSubject,
+  onRenameChapter,
+}: MainContentProps) {
   if (!subject) {
     return (
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -65,13 +74,26 @@ function MainContentImpl({ subject, progress, onToggle, onOpenSidebar }: MainCon
           >
             <Menu size={20} />
           </button>
-          <div className="min-w-0">
-            <h2 className="text-lg font-bold truncate" style={{ color: 'var(--fg)' }}>
-              {subject.name}
-            </h2>
-            <p className="text-xs mt-px" style={{ color: 'var(--fg3)' }}>
-              {pct}% complete · {doneCh}/{totalCh} chapters fully done
-            </p>
+          <div className="min-w-0 flex items-center gap-2.5">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold truncate" style={{ color: 'var(--fg)' }}>
+                  {subject.name}
+                </h2>
+                <button
+                  type="button"
+                  className="p-1 rounded hover:bg-surface2 transition-colors flex-shrink-0"
+                  style={{ border: 'none', background: 'transparent', color: 'var(--fg3)', cursor: 'pointer' }}
+                  onClick={() => onRenameSubject(subject)}
+                  title="Rename Subject"
+                >
+                  <Edit2 size={14} />
+                </button>
+              </div>
+              <p className="text-xs mt-px" style={{ color: 'var(--fg3)' }}>
+                {pct}% complete · {doneCh}/{totalCh} chapters fully done
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex gap-2.5 items-center flex-shrink-0">
@@ -120,6 +142,7 @@ function MainContentImpl({ subject, progress, onToggle, onOpenSidebar }: MainCon
                     cqChecked={!!progress[progressKey(ch.id, 'cq')]}
                     mcqChecked={!!progress[progressKey(ch.id, 'mcq')]}
                     onToggle={onToggle}
+                    onRename={onRenameChapter}
                   />
                 ))}
                 {paper.chapters.length === 0 && (

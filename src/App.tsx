@@ -3,17 +3,26 @@ import { useAuth } from '@/hooks/useAuth';
 import { LoginScreen } from '@/components/LoginScreen';
 import { Sidebar } from '@/components/Sidebar';
 import { MainContent } from '@/components/MainContent';
-import { AddSubjectModal, AddChapterModal, BulkAddModal } from '@/components/Modals';
+import {
+  AddSubjectModal,
+  AddChapterModal,
+  BulkAddModal,
+  RenameSubjectModal,
+  RenameChapterModal,
+  ExportProgressModal,
+} from '@/components/Modals';
 import {
   loadUserData,
   addSubject as addSubjectDb,
   addChapter as addChapterDb,
+  updateSubject as updateSubjectDb,
+  updateChapter as updateChapterDb,
   toggleProgress,
   progressKey,
 } from '@/lib/data';
 import type { Subject, ProgressMap, CheckType } from '@/lib/types';
 
-type ModalType = 'addSubject' | 'addChapter' | 'bulkAdd' | null;
+type ModalType = 'addSubject' | 'addChapter' | 'bulkAdd' | 'renameSubject' | 'renameChapter' | 'exportProgress' | null;
 
 function App() {
   const { user, loading, signInWithEmail, signUpWithEmail, signOut, signInAsDemo, isSupabaseConfigured } = useAuth();
@@ -23,6 +32,10 @@ function App() {
   const [dataLoading, setDataLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [renamingSubject, setRenamingSubject] = useState<Subject | null>(null);
+  const [renamingChapter, setRenamingChapter] = useState<{ id: string; name: string } | null>(null);
+
   const loadedUserId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -133,6 +146,32 @@ function App() {
     []
   );
 
+  const handleSaveSubjectName = useCallback(
+    async (subjectId: string, name: string, color: string) => {
+      await updateSubjectDb(subjectId, name, color);
+      setSubjects((prev) =>
+        prev.map((s) => (s.id === subjectId ? { ...s, name, color } : s))
+      );
+    },
+    []
+  );
+
+  const handleSaveChapterName = useCallback(
+    async (chapterId: string, name: string) => {
+      await updateChapterDb(chapterId, name);
+      setSubjects((prev) =>
+        prev.map((s) => ({
+          ...s,
+          papers: s.papers.map((p) => ({
+            ...p,
+            chapters: p.chapters.map((ch) => (ch.id === chapterId ? { ...ch, name } : ch)),
+          })),
+        }))
+      );
+    },
+    []
+  );
+
   const handleSignOut = useCallback(async () => {
     await signOut();
   }, [signOut]);
@@ -194,6 +233,7 @@ function App() {
             onAddSubject={() => { setSidebarOpen(false); setActiveModal('addSubject'); }}
             onAddChapter={() => { setSidebarOpen(false); setActiveModal('addChapter'); }}
             onBulkAdd={() => { setSidebarOpen(false); setActiveModal('bulkAdd'); }}
+            onExportProgress={() => { setSidebarOpen(false); setActiveModal('exportProgress'); }}
             onSignOut={handleSignOut}
           />
         </div>
@@ -203,6 +243,14 @@ function App() {
           progress={progress}
           onToggle={handleToggle}
           onOpenSidebar={() => setSidebarOpen(true)}
+          onRenameSubject={(subj) => {
+            setRenamingSubject(subj);
+            setActiveModal('renameSubject');
+          }}
+          onRenameChapter={(chId, chName) => {
+            setRenamingChapter({ id: chId, name: chName });
+            setActiveModal('renameChapter');
+          }}
         />
       </div>
 
@@ -224,6 +272,30 @@ function App() {
         currentSubjectId={currentSubjectId}
         onClose={() => setActiveModal(null)}
         onAdd={handleBulkAdd}
+      />
+      <RenameSubjectModal
+        open={activeModal === 'renameSubject'}
+        subject={renamingSubject}
+        onClose={() => {
+          setActiveModal(null);
+          setRenamingSubject(null);
+        }}
+        onSave={handleSaveSubjectName}
+      />
+      <RenameChapterModal
+        open={activeModal === 'renameChapter'}
+        chapter={renamingChapter}
+        onClose={() => {
+          setActiveModal(null);
+          setRenamingChapter(null);
+        }}
+        onSave={handleSaveChapterName}
+      />
+      <ExportProgressModal
+        open={activeModal === 'exportProgress'}
+        subjects={subjects}
+        progress={progress}
+        onClose={() => setActiveModal(null)}
       />
     </>
   );

@@ -225,6 +225,33 @@ export async function addSubject(
   return { id: subjectId, name, color, sort_order: sortOrder, papers: paperRows };
 }
 
+export async function updateSubject(
+  subjectId: string,
+  name: string,
+  color: string
+): Promise<void> {
+  if (!isSupabaseConfigured) {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('hsc_subjects_')) {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const subjects: Subject[] = JSON.parse(stored);
+          const subj = subjects.find((s) => s.id === subjectId);
+          if (subj) {
+            subj.name = name;
+            subj.color = color;
+            localStorage.setItem(key, JSON.stringify(subjects));
+            break;
+          }
+        }
+      }
+    }
+    return;
+  }
+  await supabase.from('subjects').update({ name, color }).eq('id', subjectId);
+}
+
 export async function addChapter(paperId: string, name: string): Promise<Chapter | null> {
   if (!isSupabaseConfigured) {
     for (let i = 0; i < localStorage.length; i++) {
@@ -275,6 +302,41 @@ export async function addChapter(paperId: string, name: string): Promise<Chapter
     .single();
 
   return data ? { id: data.id, name: data.name, sort_order: data.sort_order } : null;
+}
+
+export async function updateChapter(
+  chapterId: string,
+  name: string
+): Promise<void> {
+  if (!isSupabaseConfigured) {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('hsc_subjects_')) {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const subjects: Subject[] = JSON.parse(stored);
+          let found = false;
+          for (const s of subjects) {
+            for (const p of s.papers) {
+              const ch = p.chapters.find((c) => c.id === chapterId);
+              if (ch) {
+                ch.name = name;
+                found = true;
+                break;
+              }
+            }
+            if (found) break;
+          }
+          if (found) {
+            localStorage.setItem(key, JSON.stringify(subjects));
+            break;
+          }
+        }
+      }
+    }
+    return;
+  }
+  await supabase.from('chapters').update({ name }).eq('id', chapterId);
 }
 
 export async function toggleProgress(

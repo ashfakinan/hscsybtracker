@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode } from 'react';
-import { X } from 'lucide-react';
-import type { Subject } from '@/lib/types';
+import { X, Download, Copy, Check } from 'lucide-react';
+import type { Subject, ProgressMap, CheckType } from '@/lib/types';
+import { progressKey } from '@/lib/data';
 
 interface ModalProps {
   open: boolean;
@@ -163,6 +164,251 @@ export function AddSubjectModal({ open, onClose, onAdd }: AddSubjectModalProps) 
           ))}
         </div>
       </FormGroup>
+    </Modal>
+  );
+}
+
+// === Rename Subject Modal ===
+interface RenameSubjectModalProps {
+  open: boolean;
+  subject: Subject | null;
+  onClose: () => void;
+  onSave: (subjectId: string, name: string, color: string) => void;
+}
+
+export function RenameSubjectModal({ open, subject, onClose, onSave }: RenameSubjectModalProps) {
+  const [name, setName] = useState('');
+  const [color, setColor] = useState(COLOR_OPTIONS[0]);
+
+  useEffect(() => {
+    if (open && subject) {
+      setName(subject.name);
+      setColor(subject.color || COLOR_OPTIONS[0]);
+    }
+  }, [open, subject]);
+
+  if (!subject) return null;
+
+  return (
+    <Modal
+      open={open}
+      title="Rename Subject"
+      onClose={onClose}
+      footer={
+        <>
+          <GhostButton onClick={onClose}>Cancel</GhostButton>
+          <PrimaryButton onClick={() => { if (name.trim()) { onSave(subject.id, name.trim(), color); onClose(); } }}>
+            Save Changes
+          </PrimaryButton>
+        </>
+      }
+    >
+      <FormGroup label="Subject Name">
+        <input
+          style={inputStyle}
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+        />
+      </FormGroup>
+      <FormGroup label="Color">
+        <div className="flex gap-2 flex-wrap">
+          {COLOR_OPTIONS.map((c) => (
+            <div
+              key={c}
+              className="w-6 h-6 rounded-full cursor-pointer transition-all"
+              style={{
+                background: c,
+                border: color === c ? '2.5px solid var(--fg)' : '2.5px solid transparent',
+              }}
+              onClick={() => setColor(c)}
+            />
+          ))}
+        </div>
+      </FormGroup>
+    </Modal>
+  );
+}
+
+// === Rename Chapter Modal ===
+interface RenameChapterModalProps {
+  open: boolean;
+  chapter: { id: string; name: string } | null;
+  onClose: () => void;
+  onSave: (chapterId: string, name: string) => void;
+}
+
+export function RenameChapterModal({ open, chapter, onClose, onSave }: RenameChapterModalProps) {
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    if (open && chapter) {
+      setName(chapter.name);
+    }
+  }, [open, chapter]);
+
+  if (!chapter) return null;
+
+  return (
+    <Modal
+      open={open}
+      title="Rename Chapter"
+      onClose={onClose}
+      footer={
+        <>
+          <GhostButton onClick={onClose}>Cancel</GhostButton>
+          <PrimaryButton onClick={() => { if (name.trim()) { onSave(chapter.id, name.trim()); onClose(); } }}>
+            Save Changes
+          </PrimaryButton>
+        </>
+      }
+    >
+      <FormGroup label="Chapter Name">
+        <input
+          style={inputStyle}
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+        />
+      </FormGroup>
+    </Modal>
+  );
+}
+
+// === Export Progress Modal ===
+interface ExportProgressModalProps {
+  open: boolean;
+  subjects: Subject[];
+  progress: ProgressMap;
+  onClose: () => void;
+}
+
+export function ExportProgressModal({ open, subjects, progress, onClose }: ExportProgressModalProps) {
+  const [copied, setCopied] = useState(false);
+
+  if (!open) return null;
+
+  let totalChecks = 0;
+  let doneChecks = 0;
+  const types: CheckType[] = ['theory', 'cq', 'mcq'];
+
+  for (const subj of subjects) {
+    for (const paper of subj.papers) {
+      for (const ch of paper.chapters) {
+        totalChecks += 3;
+        for (const t of types) {
+          if (progress[progressKey(ch.id, t)]) doneChecks++;
+        }
+      }
+    }
+  }
+
+  const overallPct = totalChecks === 0 ? 0 : Math.round((doneChecks / totalChecks) * 100);
+
+  const generateSummaryText = () => {
+    let text = `HSC Study Progress Report (${overallPct}% Complete)\n`;
+    text += `=====================================\n\n`;
+    for (const subj of subjects) {
+      text += `📘 ${subj.name}:\n`;
+      for (const paper of subj.papers) {
+        text += `  📄 ${paper.name}:\n`;
+        for (const ch of paper.chapters) {
+          const tDone = progress[progressKey(ch.id, 'theory')] ? '✓' : '○';
+          const cDone = progress[progressKey(ch.id, 'cq')] ? '✓' : '○';
+          const mDone = progress[progressKey(ch.id, 'mcq')] ? '✓' : '○';
+          text += `    [T:${tDone} CQ:${cDone} MCQ:${mDone}] ${ch.name}\n`;
+        }
+      }
+      text += `\n`;
+    }
+    return text;
+  };
+
+  const handleDownloadJSON = () => {
+    const data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      overallProgressPct: overallPct,
+      subjects,
+      progress,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hsc-syllabus-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadText = () => {
+    const summary = generateSummaryText();
+    const blob = new Blob([summary], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hsc-study-report-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopyClipboard = () => {
+    navigator.clipboard.writeText(generateSummaryText()).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
+  return (
+    <Modal
+      open={open}
+      title="Export Study Progress"
+      onClose={onClose}
+      footer={
+        <GhostButton onClick={onClose}>Close</GhostButton>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <div
+          className="p-3.5 rounded-xl flex items-center justify-between"
+          style={{ background: 'var(--surface2)', border: '1px solid var(--border)' }}
+        >
+          <div>
+            <h4 className="text-sm font-bold" style={{ color: 'var(--fg)' }}>Overall Completion</h4>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--fg3)' }}>{doneChecks} of {totalChecks} topics completed</p>
+          </div>
+          <span className="text-xl font-extrabold tabular-nums" style={{ color: 'var(--accent)' }}>{overallPct}%</span>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleDownloadJSON}
+            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-xs transition-all hover:opacity-90"
+            style={{ background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer' }}
+          >
+            <Download size={14} />
+            Download Complete Backup (.JSON)
+          </button>
+          <button
+            onClick={handleDownloadText}
+            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-xs transition-all hover:opacity-90"
+            style={{ background: 'var(--surface2)', color: 'var(--fg)', border: '1px solid var(--border)', cursor: 'pointer' }}
+          >
+            <Download size={14} />
+            Download Text Report (.TXT)
+          </button>
+          <button
+            onClick={handleCopyClipboard}
+            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-xs transition-all hover:opacity-90"
+            style={{ background: 'var(--surface2)', color: 'var(--fg)', border: '1px solid var(--border)', cursor: 'pointer' }}
+          >
+            {copied ? <Check size={14} color="var(--theory)" /> : <Copy size={14} />}
+            {copied ? 'Copied to Clipboard!' : 'Copy Progress Summary to Clipboard'}
+          </button>
+        </div>
+      </div>
     </Modal>
   );
 }
