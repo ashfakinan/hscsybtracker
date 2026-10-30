@@ -1,4 +1,4 @@
-export type CheckType = 'theory' | 'cq' | 'mcq';
+export type CheckType = 'theory' | 'cq' | 'mcq' | 'studying';
 
 export interface Subject {
   id: string;

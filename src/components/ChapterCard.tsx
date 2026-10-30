@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Check, Edit2 } from 'lucide-react';
+import { Check, Edit2, BookOpen } from 'lucide-react';
 import type { CheckType } from '@/lib/types';
 
 interface ChapterCardProps {
@@ -9,6 +9,7 @@ interface ChapterCardProps {
   theoryChecked: boolean;
   cqChecked: boolean;
   mcqChecked: boolean;
+  studyingChecked: boolean;
   onToggle: (chapterId: string, type: CheckType, checked: boolean) => void;
   onRename?: (chapterId: string, currentName: string) => void;
 }
@@ -33,6 +34,7 @@ function ChapterCardImpl({
   theoryChecked,
   cqChecked,
   mcqChecked,
+  studyingChecked,
   onToggle,
   onRename,
 }: ChapterCardProps) {
@@ -47,8 +49,8 @@ function ChapterCardImpl({
     <div
       className="rounded-[10px] px-3.5 py-3 transition-colors group"
       style={{
-        background: allDone ? 'var(--done-bg)' : 'var(--surface)',
-        border: `1px solid ${allDone ? 'var(--theory)' : 'var(--border)'}`,
+        background: studyingChecked ? 'var(--accent-light)' : allDone ? 'var(--done-bg)' : 'var(--surface)',
+        border: `1.5px solid ${studyingChecked ? 'var(--accent)' : allDone ? 'var(--theory)' : 'var(--border)'}`,
       }}
     >
       <div className="flex items-start gap-2.5">
@@ -79,34 +81,51 @@ function ChapterCardImpl({
           </button>
         )}
       </div>
-      <div className="flex gap-2 mt-2.5 flex-wrap">
-        {CHECK_TYPES.map((type) => {
-          const checked = checkedMap[type];
-          return (
-            <button
-              key={type}
-              type="button"
-              className="check-btn flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full text-[12px] font-medium transition-all select-none"
-              style={{
-                border: `1.5px solid ${checked ? TYPE_COLORS[type] : 'var(--border)'}`,
-                background: checked ? TYPE_LIGHT[type] : 'var(--surface)',
-                color: checked ? TYPE_COLORS[type] : 'var(--fg)',
-              }}
-              onClick={() => onToggle(chapterId, type, !checked)}
-            >
-              <span
-                className="w-3.5 h-3.5 rounded flex items-center justify-center flex-shrink-0 transition-all"
+
+      <div className="flex items-center gap-2 mt-2.5 flex-wrap justify-between">
+        <button
+          type="button"
+          className="check-btn flex items-center gap-1.5 cursor-pointer px-3 py-1 rounded-full text-[12px] font-semibold transition-all select-none"
+          style={{
+            border: `1.5px solid ${studyingChecked ? 'var(--accent)' : 'var(--border)'}`,
+            background: studyingChecked ? 'var(--accent)' : 'var(--surface)',
+            color: studyingChecked ? '#fff' : 'var(--fg2)',
+          }}
+          onClick={() => onToggle(chapterId, 'studying', !studyingChecked)}
+        >
+          <BookOpen size={13} />
+          {studyingChecked ? 'Currently Studying (Done?)' : 'Mark Studying'}
+        </button>
+
+        <div className="flex gap-2 flex-wrap">
+          {CHECK_TYPES.map((type) => {
+            const checked = checkedMap[type];
+            return (
+              <button
+                key={type}
+                type="button"
+                className="check-btn flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full text-[12px] font-medium transition-all select-none"
                 style={{
-                  background: checked ? TYPE_COLORS[type] : 'transparent',
                   border: `1.5px solid ${checked ? TYPE_COLORS[type] : 'var(--border)'}`,
+                  background: checked ? TYPE_LIGHT[type] : 'var(--surface)',
+                  color: checked ? TYPE_COLORS[type] : 'var(--fg)',
                 }}
+                onClick={() => onToggle(chapterId, type, !checked)}
               >
-                {checked && <Check size={10} color="#fff" strokeWidth={2.5} />}
-              </span>
-              {TYPE_LABELS[type]}
-            </button>
-          );
-        })}
+                <span
+                  className="w-3.5 h-3.5 rounded flex items-center justify-center flex-shrink-0 transition-all"
+                  style={{
+                    background: checked ? TYPE_COLORS[type] : 'transparent',
+                    border: `1.5px solid ${checked ? TYPE_COLORS[type] : 'var(--border)'}`,
+                  }}
+                >
+                  {checked && <Check size={10} color="#fff" strokeWidth={2.5} />}
+                </span>
+                {TYPE_LABELS[type]}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
