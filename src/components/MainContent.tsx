@@ -142,6 +142,7 @@ function MainContentImpl({
                     cqChecked={!!progress[progressKey(ch.id, 'cq')]}
                     mcqChecked={!!progress[progressKey(ch.id, 'mcq')]}
                     studyingChecked={!!progress[progressKey(ch.id, 'studying')]}
+                    studiedChecked={!!progress[progressKey(ch.id, 'studied')]}
                     onToggle={onToggle}
                     onRename={onRenameChapter}
                   />

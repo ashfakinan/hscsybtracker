@@ -10,21 +10,26 @@ interface ChapterCardProps {
   cqChecked: boolean;
   mcqChecked: boolean;
   studyingChecked: boolean;
+  studiedChecked: boolean;
   onToggle: (chapterId: string, type: CheckType, checked: boolean) => void;
   onRename?: (chapterId: string, currentName: string) => void;
 }
 
 const CHECK_TYPES: CheckType[] = ['theory', 'cq', 'mcq'];
-const TYPE_LABELS: Record<CheckType, string> = { theory: 'Theory', cq: 'CQ', mcq: 'MCQ' };
+const TYPE_LABELS: Record<CheckType, string> = { theory: 'Theory', cq: 'CQ', mcq: 'MCQ', studying: '', studied: '' };
 const TYPE_COLORS: Record<CheckType, string> = {
   theory: 'var(--theory)',
   cq: 'var(--cq)',
   mcq: 'var(--mcq)',
+  studying: 'var(--accent)',
+  studied: 'var(--theory)',
 };
 const TYPE_LIGHT: Record<CheckType, string> = {
   theory: 'var(--theory-light)',
   cq: 'var(--cq-light)',
   mcq: 'var(--mcq-light)',
+  studying: 'var(--accent-light)',
+  studied: 'var(--theory-light)',
 };
 
 function ChapterCardImpl({
@@ -35,6 +40,7 @@ function ChapterCardImpl({
   cqChecked,
   mcqChecked,
   studyingChecked,
+  studiedChecked,
   onToggle,
   onRename,
 }: ChapterCardProps) {
@@ -42,15 +48,28 @@ function ChapterCardImpl({
     theory: theoryChecked,
     cq: cqChecked,
     mcq: mcqChecked,
+    studying: studyingChecked,
+    studied: studiedChecked,
   };
   const allDone = theoryChecked && cqChecked && mcqChecked;
+
+  const handleStudyingClick = () => {
+    if (studyingChecked) {
+      onToggle(chapterId, 'studying', false);
+      onToggle(chapterId, 'studied', true);
+    } else if (studiedChecked) {
+      onToggle(chapterId, 'studied', false);
+    } else {
+      onToggle(chapterId, 'studying', true);
+    }
+  };
 
   return (
     <div
       className="rounded-[10px] px-3.5 py-3 transition-colors group"
       style={{
-        background: studyingChecked ? 'var(--accent-light)' : allDone ? 'var(--done-bg)' : 'var(--surface)',
-        border: `1.5px solid ${studyingChecked ? 'var(--accent)' : allDone ? 'var(--theory)' : 'var(--border)'}`,
+        background: studyingChecked ? 'var(--accent-light)' : studiedChecked ? 'var(--done-bg)' : allDone ? 'var(--done-bg)' : 'var(--surface)',
+        border: `1.5px solid ${studyingChecked ? 'var(--accent)' : studiedChecked ? 'var(--theory)' : allDone ? 'var(--theory)' : 'var(--border)'}`,
       }}
     >
       <div className="flex items-start gap-2.5">
@@ -87,14 +106,14 @@ function ChapterCardImpl({
           type="button"
           className="check-btn flex items-center gap-1.5 cursor-pointer px-3 py-1 rounded-full text-[12px] font-semibold transition-all select-none"
           style={{
-            border: `1.5px solid ${studyingChecked ? 'var(--accent)' : 'var(--border)'}`,
-            background: studyingChecked ? 'var(--accent)' : 'var(--surface)',
-            color: studyingChecked ? '#fff' : 'var(--fg2)',
+            border: `1.5px solid ${studyingChecked ? 'var(--accent)' : studiedChecked ? 'var(--theory)' : 'var(--border)'}`,
+            background: studyingChecked ? 'var(--accent)' : studiedChecked ? 'var(--theory-light)' : 'var(--surface)',
+            color: studyingChecked ? '#fff' : studiedChecked ? 'var(--theory)' : 'var(--fg2)',
           }}
-          onClick={() => onToggle(chapterId, 'studying', !studyingChecked)}
+          onClick={handleStudyingClick}
         >
           <BookOpen size={13} />
-          {studyingChecked ? 'Currently Studying (Done?)' : 'Mark Studying'}
+          {studyingChecked ? 'Studying (Click when done)' : studiedChecked ? 'Studied ✓' : 'Mark Studying'}
         </button>
 
         <div className="flex gap-2 flex-wrap">
